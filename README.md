@@ -31,6 +31,7 @@ local data = {
 	{9, 4}
 }
 
+-- Degrees can be between 0 and 18:
 local degrees = 2
 
 -- Solve polynomial regression:

@@ -239,7 +239,6 @@ function MatFunctions:CorrelationCoefficient(data, terms)
 	local n = data:Size()
 	local sx, sx2, sy, sy2, sxy = 0, 0, 0, 0, 0
 	local x, y
-	--for _,pr in ipairs(data) do
 	data:ForEach(function(i, pr)
 		x = self:Regress(pr.x, terms)
 		y = pr.y
@@ -249,7 +248,6 @@ function MatFunctions:CorrelationCoefficient(data, terms)
 		sx2 = (sx2 + (x * x))
 		sy2 = (sy2 + (y * y))
 	end)
-	--end
 	local div = math.sqrt((sx2 - (sx * sx) / n) * (sy2 - (sy * sy) / n))
 	if (div ~= 0) then
 		local z = ((sxy - (sx * sy) / n) / div)
@@ -265,12 +263,10 @@ function MatFunctions:StandardError(data, terms)
 	if (n > 2) then
 		local a = 0
 		local q
-		--for _,pr in ipairs(data) do
 		data:ForEach(function(_, pr)
 			q = (self:Regress(pr.x, terms) - pr.y)
 			a = (a + (q * q))
 		end)
-		--end
 		return math.sqrt(a / (n - 2))
 	end
 	return 0
@@ -294,10 +290,9 @@ function MatFunctions:ComputeCoefficients(data, p)
 	end
 	
 	-- Create array of precalculated matrix data
-	local mpc = Array.new(rs, 0)--table.create(rs, 0)
+	local mpc = Array.new(rs, 0)
 	mpc[0] = n
 
-	--for i,pr in ipairs(data) do
 	data:ForEach(function(i, pr)
 		-- Process precalculation array
 		local x = pr.x
@@ -315,7 +310,6 @@ function MatFunctions:ComputeCoefficients(data, p)
 			x = (x * t)
 		end
 	end)
-	--end
 	
 	-- Populate square matrix section
 	for r = 0, p - 1 do

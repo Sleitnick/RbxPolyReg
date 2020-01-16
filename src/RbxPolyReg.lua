@@ -349,12 +349,31 @@ end
 --    @param data: Pair array
 --    @param p:    Polynomial degree
 function MatFunctions:ProcessData(data, p)
+	p = math.clamp(p, 0, 18)
 	data = Array.FromTable(data)
 	data:ForEachMut(function(i, v) return Pair.Coerce(v) end)
 	local terms = self:ComputeCoefficients(data, p)
 	local cc = self:CorrelationCoefficient(data, terms)
 	local se = self:StandardError(data, terms)
 	return {terms._tbl, cc, se}
+end
+
+
+function RbxPolyReg.ToFunctionSourceCode(terms, clampMin, clampMax)
+	terms = Array.FromTable(terms)
+	local code = {"local function Solve(x)\n\treturn math.clamp(\n"}
+	local size = terms:Size()
+	terms:ForEach(function(i, v)
+		local line = ("%.16e * math.pow(x, %i)"):format(v, i)
+		if (i == (size - 1)) then
+			line = (line .. ",")
+		else
+			line = (line .. " +")
+		end
+		code[#code + 1] = ("\t\t" .. line .. "\n")
+	end)
+	code[#code + 1] = ("\t\t%i, %i\n\t)\nend"):format(clampMin, clampMax)
+	return table.concat(code)
 end
 
 

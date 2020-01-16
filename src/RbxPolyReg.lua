@@ -34,10 +34,11 @@
 
 -- This is all translated from the original JavaScript source into Lua
 
-
 local RbxPolyReg = {}
 
+------------------------------------------------------------------------------------------------------
 
+-- The Array structure immitates 0-based index arrays to help with the port from JavaScript to Lua
 local Array = {}
 Array.__index = Array
 
@@ -90,7 +91,9 @@ function Array:__newindex(i, v)
 	self._tbl[i + 1] = v
 end
 
+------------------------------------------------------------------------------------------------------
 
+-- A simple XY data structure
 local Pair = {}
 Pair.__index = Pair
 RbxPolyReg.Pair = Pair
@@ -105,21 +108,27 @@ end
 
 function Pair.Coerce(obj)
 	if (typeof(obj) == "Vector2" or typeof(obj) == "Vector3") then
+		-- Convert Vector2s into Pair structure:
 		return Pair.new(obj.X, obj.Y)
 	elseif (type(obj) == "table") then
-		if (Pair.IsPair(obj)) then
-			return Pair.new(obj.x, obj.y)
-		end
+		-- Grab table from the Array structure:
 		if (Array.IsArray(obj)) then
 			obj = obj._tbl
 		end
+		-- Copy the Pair object:
+		if (Pair.IsPair(obj)) then
+			return Pair.new(obj.x, obj.y)
+		end
 		if (#obj == 2) then
+			-- {Number, Number}
 			if (type(obj[1] == "number" and type(obj[2]) == "number")) then
 				return Pair.new(obj[1], obj[2])
 			end
 		elseif (type(obj.x) == "number" and type(obj.y) == "number") then
+			-- {x = Number; y = Number}
 			return Pair.new(obj.x, obj.y)
 		elseif (type(obj.X) == "number" and type(obj.Y) == "number") then
+			-- {X = Number; Y = Number}
 			return Pair.new(obj.X, obj.Y)
 		end
 	end
@@ -130,6 +139,7 @@ function Pair:__tostring()
 	return (self.x + ", " + self.y)
 end
 
+------------------------------------------------------------------------------------------------------
 
 -- Gauss-Jordan matrix manipulation functions
 local GJ = {}
@@ -141,14 +151,12 @@ function GJ.new()
 	return self
 end
 
-
 function GJ:Divide(A, i, j, m)
 	for q = j + 1, m - 1 do
 		A[i][q] = (A[i][q] / A[i][j])
 	end
 	A[i][j] = 1
 end
-
 
 function GJ:Eliminate(A, i, j, n, m)
 	for k = 0, n - 1 do
@@ -160,7 +168,6 @@ function GJ:Eliminate(A, i, j, n, m)
 		end
 	end
 end
-
 
 function GJ:Echelonize(mat)
 	local n = mat:Size()
@@ -198,11 +205,11 @@ function GJ:Echelonize(mat)
 	return terms
 end
 
+------------------------------------------------------------------------------------------------------
 
 local MatFunctions = {}
 MatFunctions.__index = MatFunctions
 RbxPolyReg.MatFunctions = MatFunctions
-
 
 function MatFunctions.new()
 	local self = setmetatable({
@@ -210,7 +217,6 @@ function MatFunctions.new()
 	}, MatFunctions)
 	return self
 end
-
 
 -- A weak substitute for printf()
 function MatFunctions:NumberFormat(n, p, w)
@@ -220,7 +226,6 @@ function MatFunctions:NumberFormat(n, p, w)
 	end
 	return s
 end
-
 
 -- Produce a single 'y' result for a given 'x'
 function MatFunctions:Regress(x, terms)
@@ -232,7 +237,6 @@ function MatFunctions:Regress(x, terms)
 	end)
 	return y
 end
-
 
 -- Compute correlation coefficient
 function MatFunctions:CorrelationCoefficient(data, terms)
@@ -256,7 +260,6 @@ function MatFunctions:CorrelationCoefficient(data, terms)
 	return 0
 end
 
-
 -- Compute standard error
 function MatFunctions:StandardError(data, terms)
 	local n = data:Size()
@@ -272,27 +275,22 @@ function MatFunctions:StandardError(data, terms)
 	return 0
 end
 
-
 -- Create regression coefficients for provided data set
 --    @param data: Pair array
 --    @param p:    Polynomial degree
 function MatFunctions:ComputeCoefficients(data, p)
-	
 	p = (p + 1)
 	local n = data:Size()
 	local rs = (2 * p - 1)
-	
 	-- Create square matrix with added RH column
 	local m = Array.new(p)
 	for i = 0, p - 1 do
 		local mm = Array.new(p + 1, 0)
 		m[i] = mm
 	end
-	
 	-- Create array of precalculated matrix data
 	local mpc = Array.new(rs, 0)
 	mpc[0] = n
-
 	data:ForEach(function(i, pr)
 		-- Process precalculation array
 		local x = pr.x
@@ -310,19 +308,15 @@ function MatFunctions:ComputeCoefficients(data, p)
 			x = (x * t)
 		end
 	end)
-	
 	-- Populate square matrix section
 	for r = 0, p - 1 do
 		for c = 0, p - 1 do
 			m[r][c] = mpc[r + c]
 		end
 	end
-	
 	-- Reduce matrix & return terms
 	return self.GJ:Echelonize(m)
-	
 end
-
 
 -- Test the system using known data
 function MatFunctions:Test()
@@ -344,7 +338,6 @@ function MatFunctions:Test()
 	print("se = " .. self:NumberFormat(se, prec, width))
 end
 
-
 -- Process data
 --    @param data: Pair array
 --    @param p:    Polynomial degree
@@ -358,6 +351,7 @@ function MatFunctions:ProcessData(data, p)
 	return {terms._tbl, cc, se}
 end
 
+------------------------------------------------------------------------------------------------------
 
 function RbxPolyReg.ToFunctionSourceCode(terms, clampMin, clampMax)
 	terms = Array.FromTable(terms)
@@ -376,5 +370,6 @@ function RbxPolyReg.ToFunctionSourceCode(terms, clampMin, clampMax)
 	return table.concat(code)
 end
 
+------------------------------------------------------------------------------------------------------
 
 return RbxPolyReg

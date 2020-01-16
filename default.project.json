@@ -1,0 +1,18 @@
+{
+	"name": "RbxPolyReg",
+	"tree": {
+	  "$className": "DataModel",
+	  "ServerStorage": {
+		"$className": "ServerStorage",
+		"RbxPolyReg": {
+			"$path": "src"
+		}
+	  },
+	  "ServerScriptService": {
+		"$className": "ServerScriptService",
+		"RbxPolyReg": {
+			"$path": "test"
+		}
+	  }
+	}
+  }
